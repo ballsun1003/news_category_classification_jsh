@@ -1,3 +1,11 @@
+# 파일명은 naver_news_section.csv로 해주세요.
+# 컬럼명은 titles, category로 해주세요.
+# 00님이 정치, 경제
+# 01님이 사회, 문화
+# 02님이 세계, IT
+# 다 되면 PR부탁합니다.(Pull request)
+
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service as ChromeService
