@@ -37,6 +37,6 @@ for i in range(0,len(category)):
 print(df_titles)
 df_titles.info()
 # 저장
-df_titles.to_csv('./data/naver_headline_news_{}'.format(datetime.datetime.now().strftime('%Y%m%d')), index=False)
+df_titles.to_csv('./data/naver_headline_news_{}.csv'.format(datetime.datetime.now().strftime('%Y%m%d')), index=False)
 
 
