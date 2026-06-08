@@ -7,7 +7,7 @@ import datetime
 
 
 
-category = ['Politics','Economic','Social','Culture','World','IT']
+category = ['Politics', 'Economic', 'Society', 'Culture', 'World', 'IT']
 df_titles = pd.DataFrame()
 
 for i in range(0,len(category)):
@@ -30,7 +30,7 @@ for i in range(0,len(category)):
         titles.append(title.text)
     print(titles)
 
-    df_section_titles = pd.DataFrame(titles, columns=['titles'])
+    df_section_titles = pd.DataFrame(titles, columns=['title'])
     df_section_titles['category'] = category[i] # i번째 카테고리 이름 가져오기
     df_titles = pd.concat([df_titles,df_section_titles], ignore_index=True) # IT, Economy등이 들어간다.
 
