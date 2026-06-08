@@ -7,13 +7,16 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import pandas as pd
 
-max_iteration = 1000 #더보기 누를 최대횟수(이 수와 관계없이 끝에 도달하면 자동 정지)
-category_sel = 0 #카테고리 선택
+max_iteration = 30 #더보기 누를 최대횟수(이 수와 관계없이 끝에 도달하면 자동 정지)
+category_sel = 3 #카테고리 선택
 li_per_div = 6 #div당 li수
 div_begin_num = 7 #처음 나오는 div수
 div_per_click = 6 #더보기 누를때마다 나오는 div수
-category = ['Politics', 'Economics', 'Society', 'Culture', 'World', 'IT']
-
+category = ['Politics', 'Economic', 'Society', 'Culture', 'World', 'IT']
+if category_sel == 1:
+    first_div = 5 #경제일때는 첫번째 div다름
+else:
+    first_div = 4
 
 options = ChromeOptions()
 options.add_argument("lang=ko_KR")
@@ -24,7 +27,7 @@ driver = webdriver.Chrome(service=service, options=options)
 
 url = 'https://news.naver.com/section/10{}'.format(category_sel)
 driver.get(url)
-button_xpath = '//*[@id="newsct"]/div[4]/div/div[2]/a'
+button_xpath = '//*[@id="newsct"]/div[{}]/div/div[2]/a'.format(first_div)
 click_num = 0
 for i in range(max_iteration):
     try:
@@ -60,7 +63,7 @@ titles = []
 for i in range(1, (click_num*div_per_click)+div_begin_num+1):
     for j in range(1, li_per_div+1):
         try:
-            title_xpath = '//*[@id="newsct"]/div[4]/div/div[1]/div[{}]/ul/li[{}]/div/div/div[2]/a/strong'.format(i, j)
+            title_xpath = '//*[@id="newsct"]/div[{}]/div/div[1]/div[{}]/ul/li[{}]/div/div/div[2]/a/strong'.format(first_div, i, j)
             title = driver.find_element(By.XPATH, title_xpath).text
             print(title)
             titles.append(title)

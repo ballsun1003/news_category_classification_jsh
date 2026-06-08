@@ -1,25 +1,28 @@
 import pandas as pd
-df = pd.read_csv('data/naver_headline_news_Culture_20260604.csv')
+
+df = pd.read_csv('data/naver_news_Culture_20260605.csv')
 print(df.head())
 
-df_temp = pd.read_csv('data/naver_news_IT_Science_20260604.csv')
+df_temp = pd.read_csv('data/naver_news_Economic_20260605.csv')
 print(df_temp.head())
 df = pd.concat([df,df_temp], ignore_index=True)
-df_temp = pd.read_csv('data/naver_news_section.csv')
+df_temp = pd.read_csv('data/naver_news_IT_20260605.csv')
 print(df_temp.head())
 df = pd.concat([df,df_temp], ignore_index=True)
-df_temp = pd.read_csv('data/naver_news_section_p.csv')
+df_temp = pd.read_csv('data/naver_news_Politics_20260605.csv')
 print(df_temp.head())
 df = pd.concat([df,df_temp], ignore_index=True)
-df_temp = pd.read_csv('data/naver_news_section_social.csv')
+df_temp = pd.read_csv('data/naver_news_Society_20260605.csv')
 print(df_temp.head())
 df = pd.concat([df,df_temp], ignore_index=True)
-df_temp = pd.read_csv('data/naver_news_world_20260604.csv')
+df_temp = pd.read_csv('data/naver_news_World_20260605.csv')
 print(df_temp.head())
 df = pd.concat([df,df_temp], ignore_index=True)
-df_temp = pd.read_csv('data/naver_headline_news_20260605.csv')
-print(df_temp.head())
-df = pd.concat([df,df_temp], ignore_index=True)
+
+df['category'] = df['category'].replace({
+    'Economics': 'Economic',
+    'IT': 'IT_Science'
+})
 df = df.drop_duplicates()
 print(df.category.value_counts())
 print(df.isnull().sum())
