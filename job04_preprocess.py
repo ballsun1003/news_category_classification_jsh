@@ -11,6 +11,11 @@ import re
 
 df = pd.read_csv("./data/news_titles.csv")
 df.info()
+df = df.drop_duplicates(subset=['title', 'category'])
+
+bad_titles = df.groupby('title')['category'].nunique()
+bad_titles = bad_titles[bad_titles > 1].index
+df = df[~df['title'].isin(bad_titles)]
 print(df.head(30))
 print(df.category.value_counts())
 
@@ -62,8 +67,7 @@ KEEP_POS = {
 
 DROP_ONE = {
     '것', '수', '등', '때', '곳', '거', '점',
-    '중', '전', '후', '내', '외', '위', '뒤',
-    '더', '또', '못', '및', '첫', '새'
+    '및', '듯', '뿐'
 }
 
 KEEP_ONE = set('美中日北韓尹與野檢軍法警靑英佛獨印러')
@@ -138,5 +142,5 @@ np.save('./data/y_train.npy', y_train)
 np.save('./data/x_test.npy', x_test)
 np.save('./data/y_test.npy', y_test)
 
-#11767
+#14999
 #27

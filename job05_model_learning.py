@@ -5,6 +5,10 @@ from keras.layers import *
 from keras.optimizers import *
 from keras.callbacks import *
 from keras.regularizers import *
+from sklearn.utils.class_weight import compute_class_weight
+from keras.losses import CategoricalCrossentropy
+
+import tensorflow as tf
 
 
 x_train = np.load('./data/x_train.npy')
@@ -13,49 +17,46 @@ x_test = np.load('./data/x_test.npy')
 y_test = np.load('./data/y_test.npy')
 print(x_train.shape, y_train.shape, x_test.shape, y_test.shape)
 
-vocab_size = int(x_train.max()) + 1
+vocab_size = 14999
 max_len = x_train.shape[1]
 num_classes = y_train.shape[1]
 
-model = Sequential()
-model.add(Embedding(vocab_size, 512))
-model.build(input_shape=(None, max_len))
+inputs = Input(shape=(max_len,))
 
-model.add(SpatialDropout1D(0.28))
+x = Embedding(vocab_size, 512)(inputs)
+x = SpatialDropout1D(0.30)(x)
 
-model.add(Conv1D(384, 3, padding='same', kernel_regularizer=l2(5e-7)))
-model.add(BatchNormalization())
-model.add(Activation('relu'))
+x = Conv1D(320, 3, padding='same', activation='relu')(x)
+x = BatchNormalization()(x)
 
-model.add(Conv1D(320, 5, padding='same', kernel_regularizer=l2(8e-6)))
-model.add(BatchNormalization())
-model.add(Activation('relu'))
+x = Conv1D(256, 5, padding='same', activation='relu')(x)
+x = BatchNormalization()(x)
 
-model.add(Conv1D(224, 7, padding='same', kernel_regularizer=l2(3e-5)))
-model.add(BatchNormalization())
-model.add(Activation('relu'))
+x = Conv1D(192, 7, padding='same', activation='relu')(x)
+x = BatchNormalization()(x)
 
-model.add(Dropout(0.18))
+x = Bidirectional(GRU(96, activation='tanh', return_sequences=True))(x)
+x = Dropout(0.35)(x)
 
-model.add(Bidirectional(GRU(80, activation='tanh', return_sequences=True)))
-model.add(Dropout(0.38))
+max_pool = GlobalMaxPooling1D()(x)
+avg_pool = GlobalAveragePooling1D()(x)
+x = Concatenate()([max_pool, avg_pool])
 
-model.add(GlobalMaxPooling1D())
+x = Dense(128, activation='relu')(x)
+x = Dropout(0.45)(x)
 
-model.add(Dense(192, kernel_regularizer=l2(8e-5)))
-model.add(BatchNormalization())
-model.add(Activation('relu'))
-model.add(Dropout(0.45))
+x = Dense(128, activation='relu')(x)
+x = Dropout(0.35)(x)
 
-model.add(Dense(64, activation='relu', kernel_regularizer=l2(1e-4)))
-model.add(Dropout(0.30))
+outputs = Dense(num_classes, activation='softmax')(x)
 
-model.add(Dense(num_classes, activation='softmax'))
+model = Model(inputs, outputs)
+
 model.summary()
 
 callbacks = [
     ReduceLROnPlateau(
-        monitor='val_accuracy',
+        monitor='val_loss',
         factor=0.5,
         patience=3,
         min_lr=1e-6,
@@ -63,15 +64,26 @@ callbacks = [
     ),
     EarlyStopping(
         monitor='val_accuracy',
-        patience=10,
+        patience=15,
         mode='max',
         restore_best_weights=True,
         verbose=1,
     ),
 ]
 
-model.compile(loss='categorical_crossentropy', optimizer=AdamW(learning_rate=1e-4, weight_decay=1e-5), metrics=['accuracy'])
-fit_hist = model.fit(x_train,y_train,batch_size=128,epochs=1000,validation_data=(x_test,y_test), callbacks=callbacks, verbose=1)
+y_int = np.argmax(y_train, axis=1)
+
+weights = compute_class_weight(
+    class_weight='balanced',
+    classes=np.unique(y_int),
+    y=y_int
+)
+
+class_weight = dict(enumerate(weights))
+
+
+model.compile(loss=CategoricalCrossentropy(label_smoothing=0.02), optimizer=AdamW(learning_rate=2e-4, weight_decay=1e-5), metrics=['accuracy'])
+fit_hist = model.fit(x_train,y_train,batch_size=64,epochs=1000,validation_data=(x_test,y_test), callbacks=callbacks, class_weight=class_weight, verbose=1)
 score = model.evaluate(x_test,y_test,verbose=0)
 
 
@@ -96,4 +108,4 @@ def plot_history(history):
 
 plot_history(fit_hist)
 print(score)
-model.save('./model_{}.h5'.format(score[1]))
+model.save('./model_{}_bat64_emb512_classW.h5'.format(score[1]))
